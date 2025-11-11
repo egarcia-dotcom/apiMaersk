@@ -6,9 +6,6 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3007;
 
-// Middleware global para capturar errores de auth
-app.use(handleAuthError);
-
 // Health endpoint protegido
 app.get('/health', checkJwt, (req, res) => {
   res.json({
@@ -19,10 +16,13 @@ app.get('/health', checkJwt, (req, res) => {
   });
 });
 
-// Endpoint público
-app.get('/', (req, res) => {
-  res.send('API funcionando');
+// Middleware para rutas no definidas
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not Found' });
 });
+
+// Middleware global de errores
+app.use(handleAuthError);
 
 app.listen(port, () => {
   console.log(`✅ Server running on port ${port}`);
