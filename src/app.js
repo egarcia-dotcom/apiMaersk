@@ -1,20 +1,32 @@
-// src/app.js
-import express from "express";
-import dotenv from "dotenv";
-dotenv.config({ path: "./.env", override: true });
-
-import bookingRouter from "./routes/booking.js";
-import ackRouter from "./routes/ack.js";
-import healthRouter from "./routes/health.js";
+require('dotenv').config();
+const express = require('express');
+const { auth } = require('express-oauth2-jwt-bearer');
 
 const app = express();
-app.use(express.json());
+const port = process.env.PORT || 3000;
 
-// Rutas
-app.use("/booking", bookingRouter);
-app.use("/ack", ackRouter);
-app.use("/health", healthRouter); // Health endpoint obligatorio
+// Middleware OAuth2 usando Azure AD JWT
+const checkJwt = auth({
+  audience: process.env.AUDIENCE,
+  issuerBaseURL: process.env.ISSUER,
+});
 
-// Puerto
-const PORT = process.env.PORT || 3007;
-app.listen(PORT, '0.0.0.0', () => console.log(`✅ Server running on port ${PORT}`));
+// Health endpoint protegido
+app.get('/health', checkJwt, (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Application is up and running',
+    timestamp: new Date(),
+    version: '1.0.0'
+  });
+});
+
+// Endpoint público
+app.get('/', (req, res) => {
+  res.send('API funcionando');
+});
+
+
+app.listen(port, () => {
+  console.log(`✅ Server running on port ${port}`);
+});
