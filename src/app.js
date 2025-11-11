@@ -1,15 +1,13 @@
-require('dotenv').config();
-const express = require('express');
-const { auth } = require('express-oauth2-jwt-bearer');
+import express from 'express';
+import dotenv from 'dotenv';
+import { checkJwt, handleAuthError } from './middleware/auth.js';
 
+dotenv.config();
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3007;
 
-// Middleware OAuth2 usando Azure AD JWT
-const checkJwt = auth({
-  audience: process.env.AUDIENCE,
-  issuerBaseURL: process.env.ISSUER,
-});
+// Middleware global para capturar errores de auth
+app.use(handleAuthError);
 
 // Health endpoint protegido
 app.get('/health', checkJwt, (req, res) => {
@@ -25,7 +23,6 @@ app.get('/health', checkJwt, (req, res) => {
 app.get('/', (req, res) => {
   res.send('API funcionando');
 });
-
 
 app.listen(port, () => {
   console.log(`✅ Server running on port ${port}`);
